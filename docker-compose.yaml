@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+  todo-list-app:
+    image: cfthoo10/todo-list
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: sh -c "/wait && /app/main"
+    environment:
+      - WAIT_HOSTS=postgres:5432
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=30
+      - WAIT_HOST_CONNECT_TIMEOUT=30
