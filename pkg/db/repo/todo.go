@@ -86,10 +86,10 @@ func (t *TodoList) FetchByID(ctx context.Context, id int) (*model.Task, error) {
 }
 
 // Update will update task
-func (t *TodoList) Update(ctx context.Context, task *model.Task) (*model.Task, error) {
+func (t *TodoList) Update(ctx context.Context, task *model.Task, userId string) (*model.Task, error) {
 
 	now := time.Now()
-	statement := "UPDATE tasks SET name=$1 , modified_at=$2 WHERE id=$3"
+	statement := "UPDATE tasks SET name=$1 , modified_at=$2 WHERE id=$3 and created_by=$4"
 	_, err := t.DB.Exec(statement, task.Name, now, task.ID)
 	if err != nil {
 		return nil, err
@@ -104,11 +104,11 @@ func (t *TodoList) Update(ctx context.Context, task *model.Task) (*model.Task, e
 }
 
 // Update will update task
-func (t *TodoList) MarkComplete(ctx context.Context, id int) (*model.Task, error) {
+func (t *TodoList) MarkComplete(ctx context.Context, id int, userId string) (*model.Task, error) {
 
 	now := time.Now()
-	statement := "UPDATE tasks SET complete=true , modified_at=$1 WHERE id=$2"
-	_, err := t.DB.Exec(statement, now, id)
+	statement := "UPDATE tasks SET complete=true , modified_at=$1 WHERE id=$2 and created_by=$3"
+	_, err := t.DB.Exec(statement, now, id, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +122,13 @@ func (t *TodoList) MarkComplete(ctx context.Context, id int) (*model.Task, error
 }
 
 // Delete will delete a task
-func (t *TodoList) Delete(ctx context.Context, id int) error {
+func (t *TodoList) Delete(ctx context.Context, id int, userId string) error {
 	if id < 0 {
 		return fmt.Errorf("invalid id")
 	}
 
-	statement := "DELETE from tasks WHERE id=$1"
-	_, err := t.DB.Exec(statement, id)
+	statement := "DELETE from tasks WHERE id=$1 and created_by=$2"
+	_, err := t.DB.Exec(statement, id, userId)
 	if err != nil {
 		return err
 	}

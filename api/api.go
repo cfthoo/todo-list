@@ -16,9 +16,9 @@ type DAO interface {
 	Create(ctx context.Context, task *model.Task) (*model.Task, error)
 	FetchAll(ctx context.Context, userId string) ([]model.Task, error)
 	FetchByID(ctx context.Context, id int) (*model.Task, error)
-	Update(ctx context.Context, task *model.Task) (*model.Task, error)
-	MarkComplete(ctx context.Context, id int) (*model.Task, error)
-	Delete(ctx context.Context, id int) error
+	Update(ctx context.Context, task *model.Task, userId string) (*model.Task, error)
+	MarkComplete(ctx context.Context, id int, userId string) (*model.Task, error)
+	Delete(ctx context.Context, id int, userId string) error
 }
 
 // Handler provides all of the task handlers
@@ -145,7 +145,8 @@ func (h *Handler) Update() http.HandlerFunc {
 			return
 		}
 
-		resp, err := h.TodoListDAO.Update(r.Context(), task)
+		userID := oauth2api.UserId
+		resp, err := h.TodoListDAO.Update(r.Context(), task, userID)
 
 		if err != nil {
 			msg := &errorMessage{
@@ -164,8 +165,8 @@ func (h *Handler) MarkComplete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.Atoi(vars["id"])
-
-		resp, err := h.TodoListDAO.MarkComplete(r.Context(), id)
+		userID := oauth2api.UserId
+		resp, err := h.TodoListDAO.MarkComplete(r.Context(), id, userID)
 
 		if err != nil {
 			msg := &errorMessage{
@@ -184,8 +185,8 @@ func (h *Handler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.Atoi(vars["id"])
-
-		err := h.TodoListDAO.Delete(r.Context(), id)
+		userID := oauth2api.UserId
+		err := h.TodoListDAO.Delete(r.Context(), id, userID)
 
 		if err != nil {
 			msg := &errorMessage{
