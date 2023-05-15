@@ -20,11 +20,11 @@ func (t *TodoList) Create(ctx context.Context, task *model.Task) (*model.Task, e
 	if task == nil {
 		return nil, errors.New("task can not be nil")
 	}
-
+	completed := false
 	now := time.Now()
 	var lastInsertId int64
-	statement := "INSERT INTO tasks ( name, created_by, created_at, modified_at) VALUES ($1, $2,$3,$4) RETURNING id"
-	err := t.DB.QueryRow(statement, task.Name, task.CreatedBy, now, now).Scan(&lastInsertId)
+	statement := "INSERT INTO tasks ( name, created_by,complete, created_at, modified_at) VALUES ($1, $2,$3,$4,$5) RETURNING id"
+	err := t.DB.QueryRow(statement, task.Name, task.CreatedBy, completed, now, now).Scan(&lastInsertId)
 	if err != nil {
 		fmt.Println("sss:", err)
 		return nil, err
@@ -55,7 +55,7 @@ func (t *TodoList) FetchAll(ctx context.Context, userId string) ([]model.Task, e
 
 	for rows.Next() {
 		var t model.Task
-		err := rows.Scan(&t.ID, &t.Name, &t.CreatedBy, &t.CreatedAt, &t.ModifiedAt)
+		err := rows.Scan(&t.ID, &t.Name, &t.Complete, &t.CreatedBy, &t.CreatedAt, &t.ModifiedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (t *TodoList) FetchByID(ctx context.Context, id int) (*model.Task, error) {
 		return nil, err
 	}
 	if rows.Next() {
-		err = rows.Scan(&task.ID, &task.Name, &task.CreatedBy, &task.CreatedAt, &task.ModifiedAt)
+		err = rows.Scan(&task.ID, &task.Name, &task.Complete, &task.CreatedBy, &task.CreatedAt, &task.ModifiedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -96,6 +96,24 @@ func (t *TodoList) Update(ctx context.Context, task *model.Task) (*model.Task, e
 	}
 
 	res, err := t.FetchByID(context.Background(), task.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// Update will update task
+func (t *TodoList) MarkComplete(ctx context.Context, id int) (*model.Task, error) {
+
+	now := time.Now()
+	statement := "UPDATE tasks SET complete=true , modified_at=$1 WHERE id=$2"
+	_, err := t.DB.Exec(statement, now, id)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := t.FetchByID(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}

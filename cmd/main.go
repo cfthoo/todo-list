@@ -16,14 +16,14 @@ import (
 )
 
 func main() {
-
+	fmt.Print("sas")
 	godotenv.Load(".env")
 	db, err := conn.ConnectDatabase()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
+	fmt.Print("sas")
 	// db migration
 	conn.RunDBMigration(os.Getenv("MIGRATION_URL"), os.Getenv("DB_SOURCE"))
 
@@ -46,6 +46,7 @@ func main() {
 	r.Methods(http.MethodGet).Path("/todolist").Handler(controller.ValidateJWT(u.List()))
 	r.Methods(http.MethodGet).Path(fmt.Sprintf("/todolist/{%s}", "id")).Handler(controller.ValidateJWT(u.FetchByID()))
 	r.Methods(http.MethodPut).Path("/todolist").Handler(controller.ValidateJWT(u.Update()))
+	r.Methods(http.MethodPatch).Path(fmt.Sprintf("/todolist/{%s}", "id")).Handler(controller.ValidateJWT(u.MarkComplete()))
 	r.Methods(http.MethodDelete).Path(fmt.Sprintf("/todolist/{%s}", "id")).Handler(controller.ValidateJWT(u.Delete()))
 	// Start the HTTP server
 	addr := ":8080"

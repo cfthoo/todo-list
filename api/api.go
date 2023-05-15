@@ -17,6 +17,7 @@ type DAO interface {
 	FetchAll(ctx context.Context, userId string) ([]model.Task, error)
 	FetchByID(ctx context.Context, id int) (*model.Task, error)
 	Update(ctx context.Context, task *model.Task) (*model.Task, error)
+	MarkComplete(ctx context.Context, id int) (*model.Task, error)
 	Delete(ctx context.Context, id int) error
 }
 
@@ -66,6 +67,20 @@ func (h *Handler) List() http.HandlerFunc {
 		// set currently logged in userId to userID
 		// here we only want to retrieve the task for a currently logged in user
 		userID := oauth2api.UserId
+
+		// // get by cookie
+		// userID, err := r.Cookie("UserId")
+		// if err != nil {
+		// 	switch {
+		// 	case errors.Is(err, http.ErrNoCookie):
+		// 		http.Error(w, "cookie not found", http.StatusBadRequest)
+		// 	default:
+		// 		log.Println(err)
+		// 		http.Error(w, "server error", http.StatusInternalServerError)
+		// 	}
+		// 	return
+		// }
+
 		tasks, err := h.TodoListDAO.FetchAll(r.Context(), userID)
 		if err != nil {
 			msg := &errorMessage{
@@ -131,6 +146,26 @@ func (h *Handler) Update() http.HandlerFunc {
 		}
 
 		resp, err := h.TodoListDAO.Update(r.Context(), task)
+
+		if err != nil {
+			msg := &errorMessage{
+				Error:   err.Error(),
+				Message: "database error",
+			}
+			StdResponse(w, http.StatusInternalServerError, msg)
+			return
+		}
+		StdResponse(w, http.StatusOK, resp)
+	}
+}
+
+// update will return the updated task
+func (h *Handler) MarkComplete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, _ := strconv.Atoi(vars["id"])
+
+		resp, err := h.TodoListDAO.MarkComplete(r.Context(), id)
 
 		if err != nil {
 			msg := &errorMessage{

@@ -100,6 +100,19 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 		// it is recommeded to set user_id in cookies
 		UserId = userInfo.Id
+
+		// cookie := http.Cookie{
+		// 	Name:     "UserId",
+		// 	Value:    userInfo.Id,
+		// 	Path:     "/",
+		// 	MaxAge:   3600,
+		// 	HttpOnly: true,
+		// 	Secure:   true,
+		// 	SameSite: http.SameSiteLaxMode,
+		// }
+
+		// http.SetCookie(w, &cookie)
+
 	}
 
 	// get jwtToken
